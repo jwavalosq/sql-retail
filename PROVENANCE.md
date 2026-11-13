@@ -46,4 +46,4 @@ Combined raw counts, measured: 1,067,371 rows, 5,942 distinct Customer IDs, 53,6
 - No rows were invented. No customer names were invented: the file has none.
 - No churn classifier was built. RFM segments are descriptive buckets from stated thresholds.
 - No forecast is presented as a prediction. No language model was trained or used.
-- Nothing was published, posted, or signed into anywhere. Local build only.
+- Published Nov 12, 2026 at https://github.com/jwavalosq/sql-retail. Nothing was posted to LinkedIn.

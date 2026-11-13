@@ -2,7 +2,7 @@
 
 ## What was built
 
-A SQL only portfolio project on the full UCI Online Retail II file, in the same story driven style as the Executive Orders in SQL project, but on retail data. Local build only at `~/workspace/sql-retail/`. Nothing was published, no GitHub repo was created, nothing was posted, per the brief. Jesus will give a separate explicit go before any publish.
+A SQL only portfolio project on the full UCI Online Retail II file, in the same story driven style as the Executive Orders in SQL project, but on retail data. Built locally at `~/workspace/sql-retail/`, then published Nov 12, 2026 at https://github.com/jwavalosq/sql-retail after Jesus gave the explicit go.
 
 ## Sources
 
@@ -80,5 +80,5 @@ Em-dash check: grep for the em-dash character across the whole folder returned z
 - No large raw or cleaned transaction CSV is shipped in the repo folder, because a 45 MB plus file would fail the GitHub blob API. Results are small aggregated CSVs only.
 - RFM segments are descriptive buckets from stated thresholds, not a proven churn predictor. No churn model and no forecast are presented.
 - Within-sheet exact duplicates are kept and reported, 11,620 rows, as documented in PROVENANCE.md.
-- The story site is a local HTML file. It is not published anywhere, per the local only instruction.
+- The story site is published at https://jwavalosq.github.io/sql-retail/
 - Charts are matplotlib only, plain styled, built from query result CSVs. No interactive dashboard was built for this project, because the brief asked for SQL mastery, not a dashboard.

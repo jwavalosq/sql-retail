@@ -80,4 +80,4 @@ No language model was trained or used here. This project is SQL only, by design:
 - `data/raw/online_retail_II.xlsx`: the UCI file, gitignored, re-downloadable by the loader.
 - `BUILD_REPORT.md`, `PROVENANCE.md`: sources, build steps, verification log.
 
-Local build only. Nothing here has been published to GitHub.
+Published at https://github.com/jwavalosq/sql-retail, story site https://jwavalosq.github.io/sql-retail/
