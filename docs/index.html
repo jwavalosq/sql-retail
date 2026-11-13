@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Retail in SQL: Learn SQL on 791,045 Real Order Lines</title>
+<style>
+body { font-family: Georgia, serif; max-width: 820px; margin: 0 auto; padding: 24px; line-height: 1.6; color: #222; }
+h1 { font-size: 2em; }
+h2 { margin-top: 2em; border-top: 1px solid #ccc; padding-top: 0.5em; }
+code { background: #f2f2f2; padding: 1px 5px; }
+pre { background: #f7f7f7; padding: 12px; overflow-x: auto; }
+img { max-width: 100%; height: auto; }
+.note { background: #fff8e1; border-left: 4px solid #d9a400; padding: 10px 14px; }
+a { color: #0b5394; }
+</style>
+</head>
+<body>
+
+<h1>Retail in SQL</h1>
+<p>Learn SQL on a real shop: 791,045 cleaned order lines from a UK online gift retailer, Dec 2009 to Dec 2011, worth 17,431,551.18 GBP. No toy data. No server. Just SQLite, six query files, and questions a recruiter would actually ask.</p>
+
+<p>A retail order line is one product on one invoice: how many units, at what price, bought by which customer, in which country, on which date. Revenue is Quantity times Price, in GBP. Most customers here are wholesalers who buy again and again, which is why repeat buyers drive almost all the revenue.</p>
+
+<p><strong>How to run this project.</strong> Install the requirements, then build the database, then run the query files in order:</p>
+<pre>pip install -r requirements.txt
+python3 scripts/load_database.py
+sqlite3 retail.db &lt; sql/01_foundations.sql</pre>
+<p>Repeat the last command for files 02 through 06. The database file is gitignored on purpose: you rebuild it any time with the load script, which downloads the UCI file directly if the Excel file is missing. The source is UCI Machine Learning Repository, Online Retail II, dataset 502, DOI 10.24432/C5CG6D.</p>
+
+<div class="note">
+<p><strong>Read this first: the honest limits.</strong> This is the full UCI file, Dec 2009 to Dec 2011, not the Dec 2010 to Dec 2011 slice used in the earlier Python retail project. The two UCI sheets overlap Dec 1 to Dec 9, 2010, so the loader removes the second copy of 14,504 rows, worth 311,878.00 GBP, and counts it. Without that step, Dec 2010 would read 884,591.89 GBP instead of 572,713.89 GBP. No customer names exist in the file. StockCode M is Manual and StockCode POST is postage, not real products. RFM segments are descriptive buckets from stated thresholds, not a proven churn predictor. December 2009 and December 2011 are partial months.</p>
+</div>
+
+<h2>Chapter 1: Foundations. Looking at rows.</h2>
+<p><strong>The question in plain words:</strong> What is in this table, and how do I look at just the rows I care about?</p>
+<p><strong>What the SQL does:</strong> <code>SELECT</code> picks columns. <code>WHERE</code> filters rows. <code>ORDER BY</code> sorts them. <code>LIMIT</code> keeps only the first few. <code>DISTINCT</code> removes duplicates. <code>LIKE</code> searches inside text.</p>
+<p><strong>The answer:</strong> The transactions table holds 791,045 lines, 5,878 customers, 4,631 products, and 41 countries. The first lines are from 2009-12-01, invoice 489434. The newest lines are from 2011-12-09. The most expensive line by unit price is 10,953.50 GBP, a Manual line. The cheapest line costs 0.001 GBP. No lines have a missing Description in the cleaned data.</p>
+<p>Follow along: <a href="../sql/01_foundations.sql">01_foundations.sql</a></p>
+
+<h2>Chapter 2: Aggregations. Counting and grouping.</h2>
+<p><strong>The question in plain words:</strong> How much money did this shop make, who bought the most, and which months, countries, and products dominate?</p>
+<p><strong>What the SQL does:</strong> <code>COUNT</code> counts rows. <code>SUM</code>, <code>AVG</code>, <code>MIN</code>, and <code>MAX</code> summarize numbers. <code>GROUP BY</code> splits rows into groups, one result row per group. <code>HAVING</code> filters groups, the way <code>WHERE</code> filters single rows.</p>
+<p><strong>The answer:</strong> Total revenue is 17,431,551.18 GBP. The best month is 2010-11 with 1,172,336.04 GBP, then 2011-11 with 1,161,817.38 GBP. The United Kingdom leads with 14,444,491.73 GBP, 82.9 percent of revenue. The top product is REGENCY CAKESTAND 3 TIER with 278,150.20 GBP. The average basket is 471.52 GBP, the median basket is 303.60 GBP, so the average is pulled up by large wholesale orders. Eight countries clear 100,000 GBP.</p>
+<p><img src="charts/01_monthly_revenue.png" alt="Monthly revenue, Dec 2009 to Dec 2011"></p>
+<p><img src="charts/02_top_countries.png" alt="Top 10 countries by revenue"></p>
+<p><img src="charts/03_top_products.png" alt="Top 10 products by revenue"></p>
+<p><img src="charts/04_revenue_by_year.png" alt="Revenue by year"></p>
+<p>Follow along: <a href="../sql/02_aggregations.sql">02_aggregations.sql</a></p>
+
+<h2>Chapter 3: Joins. Combining tables and checking they agree.</h2>
+<p><strong>The question in plain words:</strong> How do I combine this fact table with the dimension tables built from it, and how do I prove two tables agree?</p>
+<p><strong>What the SQL does:</strong> A <code>JOIN</code> matches rows from two tables on a shared value, here the customer ID, the StockCode, the country, or the month. <code>INNER JOIN</code> keeps only rows that match on both sides. <code>LEFT JOIN</code> keeps every row from the left table and fills NULL where the right table has no match, so "no match" stays visible. A self-join joins a table to itself with two aliases, to compare rows inside the same table.</p>
+<p><strong>The answer:</strong> The summary tables match the main table exactly: every customer revenue and every month revenue differs by 0 after rounding to 2 decimals. The LEFT JOIN shows which customers had no orders in the last 90 days of the file. The self-join shows repeated lines inside single invoices: those within-sheet repeats are kept in the cleaned data, 11,620 rows, because they cannot be told apart from genuine repeated lines.</p>
+<p>Follow along: <a href="../sql/03_joins.sql">03_joins.sql</a></p>
+
+<h2>Chapter 4: Window functions. Ranking, running totals, and change.</h2>
+<p><strong>The question in plain words:</strong> How do I rank things, track a running total, and compare each month with the month before, without collapsing rows?</p>
+<p><strong>What the SQL does:</strong> A window function computes across rows related to the current row, but keeps every row in the result. <code>GROUP BY</code> collapses groups. Window functions do not. <code>RANK</code> gives tied rows the same number. <code>ROW_NUMBER</code> never ties. <code>LAG</code> pulls the previous row's value, so you can compute change. A running total sums every row up to the current row.</p>
+<p><strong>The answer:</strong> REGENCY CAKESTAND 3 TIER is rank 1 by revenue. The running total reaches 17,431,551.18 GBP by Dec 2011. The careful month over month query builds every calendar month from 2009-12 to 2011-12 first, so no month is hidden: all 25 months have revenue. The "latest order per customer" query is a classic interview pattern: partition by customer, order by date descending, keep row 1. Read the top product per country with care: in Germany and France it is postage, and in EIRE it is Manual, not real products.</p>
+<p><img src="charts/06_running_total.png" alt="Running total revenue by month"></p>
+<p>Follow along: <a href="../sql/04_window_functions.sql">04_window_functions.sql</a></p>
+
+<h2>Chapter 5: CTEs and CASE. Steps and buckets.</h2>
+<p><strong>The question in plain words:</strong> How do I break a hard question into steps, and how do I sort customers into readable buckets?</p>
+<p><strong>What the SQL does:</strong> <code>WITH</code> gives a name to a step, called a common table expression, or CTE. Later steps use that name like a table. <code>CASE WHEN</code> tests rows one condition at a time and returns the first matching label, which is how you turn numbers into buckets such as "Champions" or "At Risk".</p>
+<p><strong>The answer:</strong> RFM means Recency, Frequency, Monetary, measured from 2011-12-10, the day after the last order. Champions are 771 customers, 13.1 percent of the base, but bring 60.9 percent of revenue. Loyal customers are 1,397, with 19.4 percent of revenue. At Risk customers are 344, with 6.7 percent. There are 1,628 customers whose last order was within 30 days, and 1,614 whose last order was over a year ago. The average customer spent 2,965.56 GBP in total, and 1,160 customers spent more than that average.</p>
+<p><img src="charts/05_rfm_segments.png" alt="Revenue by RFM segment"></p>
+<p><img src="charts/07_repeat_vs_onetime.png" alt="Repeat buyers versus one-time buyers"></p>
+<p>Follow along: <a href="../sql/05_ctes_and_case.sql">05_ctes_and_case.sql</a></p>
+
+<h2>Chapter 6: Capstone. Five interview questions.</h2>
+<p><strong>The question in plain words:</strong> Can you answer recruiter questions with one clear query each, and explain every line out loud?</p>
+<p><strong>What the SQL does:</strong> Each query combines the earlier steps: counting, ranking, joining, CTEs, and CASE. Nothing new is introduced here. The capstone proves the ladder worked.</p>
+<p><strong>The answers:</strong></p>
+<ol>
+<li>Which month made the most money, and why? 2010-11, with 1,172,336.04 GBP, 6.7 percent of all revenue. November leads in both years, so this is Christmas shopping, not a one-off.</li>
+<li>Who are the top 10 customers, and what share do they bring? 2,787,566.23 GBP, 16.0 percent of all revenue. The top customer, 18102, brings 580,987.04 GBP alone.</li>
+<li>Which country outside the UK matters most? EIRE, with 616,897.33 GBP, 3.5 percent of all revenue and 20.7 percent of non-UK revenue. Even so, the UK is 82.9 percent of revenue, so this is a UK shop with export sales.</li>
+<li>Do repeat buyers or one-time buyers drive this business? Repeat buyers: 4,255 customers, 72.4 percent of the base, 96.8 percent of revenue. One-time buyers: 1,623 customers, 3.2 percent of revenue.</li>
+<li>How well does each first-order cohort come back? The Dec 2009 cohort is the largest, with 955 customers, and 91.2 percent of them ordered again. Later cohorts return less often, but they also had less time to return before the file ends on 2011-12-09.</li>
+</ol>
+<p><img src="charts/08_top_customers.png" alt="Top 10 customers by revenue"></p>
+<p>Follow along: <a href="../sql/06_capstone.sql">06_capstone.sql</a></p>
+
+<h2>What to say in an interview</h2>
+<p>If a recruiter asks what you did here, say this: I took the full UCI Online Retail II file, 1,067,371 rows over two years, cleaned it in Python with a counted funnel, caught that the two sheets overlap for nine days in Dec 2010 and removed the second copy, loaded it into SQLite as a fact table plus customer, product, country, and invoice tables, and answered questions with SQL alone, from basic filters up to window functions, CTEs, and RFM segments. I checked my results against summary tables and stated the limits plainly: no customer names exist, Manual and postage are not real products, RFM segments are descriptive buckets, and Dec 2009 and Dec 2011 are partial months. The queries are in the <code>sql/</code> folder, the outputs are in <code>results/</code>, and the charts are in <code>charts/</code>.</p>
+
+<p>Local build only. Nothing here has been published to GitHub.</p>
+
+</body>
+</html>

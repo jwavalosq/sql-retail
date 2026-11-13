@@ -1,0 +1,6 @@
+step,rows_remaining,rows_dropped,note
+"Raw, both sheets combined",1067371,0,"UCI file, 1,067,371 rows as listed by UCI"
+After dropping cancellations (Invoice starting with C),1047877,19494,"Cancellations are 19,494 rows, 1.8 percent of raw"
+After dropping Quantity <= 0 or Price <= 0,1041670,6207,"Price is 0 on 6,202 raw rows, negative on 5; Quantity is negative on 22,950 raw rows, never 0"
+After dropping rows with no Customer ID,805549,236121,"All 4,382 rows with a missing Description are in this group, so cleaned data has zero missing Descriptions"
+After dropping second copy of cross-sheet duplicates,791045,14504,"Dec 1 to Dec 9, 2010 appears in both sheets; second copy worth 311,878.00 GBP"
